@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Photo Gallery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #1a1614;
+      --cream:  #f5f0e8;
+      --warm:   #c8a96e;
+      --muted:  #8b7d6b;
+      --border: #ddd5c4;
+      --shadow: rgba(26,22,20,.18);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 48px 24px;
+    }
+
+    /* ── header ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+    header h1 em {
+      color: var(--warm);
+      font-style: italic;
+    }
+    header p {
+      margin-top: 10px;
+      font-size: .95rem;
+      color: var(--muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: var(--warm);
+      margin: 16px auto 0;
+    }
+
+    /* ── preview pane ── */
+    #image {
+      position: relative;
+      width: 100%;
+      max-width: 780px;
+      aspect-ratio: 16/9;
+      margin: 0 auto 48px;
+      border-radius: 6px;
+      overflow: hidden;
+      background-color: #e8e2d8;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      box-shadow: 0 8px 40px var(--shadow);
+      transition: background-image .45s ease, box-shadow .3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #image::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(255,255,255,.06) 0%, rgba(0,0,0,.25) 100%);
+      pointer-events: none;
+    }
+    #image .placeholder-text {
+      position: relative;
+      z-index: 1;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+      transition: opacity .3s ease;
+    }
+    #image .caption-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2;
+      padding: 20px 24px 18px;
+      background: linear-gradient(to top, rgba(0,0,0,.65) 0%, transparent 100%);
+      color: #fff;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      font-style: italic;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .35s ease, transform .35s ease;
+      pointer-events: none;
+    }
+    #image.active .placeholder-text { opacity: 0; }
+    #image.active .caption-overlay  { opacity: 1; transform: translateY(0); }
+
+    /* ── grid ── */
+    .gallery-label {
+      text-align: center;
+      font-size: .8rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .thumb-wrap {
+      position: relative;
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: pointer;
+      aspect-ratio: 4/3;
+      box-shadow: 0 3px 12px var(--shadow);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .thumb-wrap:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 28px var(--shadow);
+    }
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter .25s ease;
+    }
+    .thumb-wrap:hover img { filter: brightness(1.08) saturate(1.1); }
+    .thumb-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 8px 10px 7px;
+      background: linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 100%);
+      color: #fff;
+      font-size: .72rem;
+      letter-spacing: .04em;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .thumb-wrap:hover .thumb-label { opacity: 1; }
+
+    /* ── footer ── */
+    footer {
+      text-align: center;
+      margin-top: 56px;
+      font-size: .8rem;
+      color: var(--border);
+      letter-spacing: .08em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Photo <em>Gallery</em></h1>
+  <p>Hover over a thumbnail to explore</p>
+  <div class="divider"></div>
+</header>
+
+<!-- ── PREVIEW DIV – id="image" ── -->
+<div id="image">
+  <span class="placeholder-text">Hover over an image below to display here.</span>
+  <div class="caption-overlay"></div>
+</div>
+
+<p class="gallery-label">— Collection —</p>
+
+<!-- ── THUMBNAIL GRID ── -->
+<div class="grid">
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80"
+         alt="Mountain Peaks"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Mountain Peaks</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80"
+         alt="Tropical Beach"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Tropical Beach</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80"
+         alt="Forest Path"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Forest Path</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=400&q=80"
+         alt="Golden Desert"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Golden Desert</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=80"
+         alt="Misty Valley"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Misty Valley</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&q=80"
+         alt="Sunset Lake"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Sunset Lake</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1490077476659-095159692ab5?w=400&q=80"
+         alt="Autumn Meadow"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Autumn Meadow</span>
+  </div>
+
+  <div class="thumb-wrap">
+    <img src="https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=400&q=80"
+         alt="Waterfall Cascade"
+         onmouseover="upDate(this)"
+         onmouseleave="undo()" />
+    <span class="thumb-label">Waterfall Cascade</span>
+  </div>
+</div>
+
+<footer>Interactive Photo Gallery &mdash; JavaScript DOM Practice</footer>
+
+<script>
+  /*
+   * upDate — called when the mouse enters a thumbnail image.
+   * @param {HTMLImageElement} previewPic  – the <img> element being hovered
+   */
+  function upDate(previewPic) {
+    // 1. Confirm the event is firing (useful during development)
+    console.log('upDate triggered');
+    console.log('alt:', previewPic.alt);
+    console.log('src:', previewPic.src);
+
+    // 2. Grab the preview pane and its inner elements
+    const imageDiv    = document.getElementById('image');
+    const captionEl   = imageDiv.querySelector('.caption-overlay');
+
+    // 3. Set the background image of #image to the hovered thumbnail's src
+    imageDiv.style.backgroundImage = `url('${previewPic.src}')`;
+
+    // 4. Update the visible caption text to the image's alt attribute
+    captionEl.textContent = previewPic.alt;
+
+    // 5. Add the "active" class to trigger CSS transitions
+    imageDiv.classList.add('active');
+  }
+
+  /*
+   * undo — called when the mouse leaves a thumbnail image.
+   * Resets the preview pane back to its original empty state.
+   */
+  function undo() {
+    console.log('undo triggered');
+
+    const imageDiv  = document.getElementById('image');
+    const captionEl = imageDiv.querySelector('.caption-overlay');
+
+    // 1. Remove background image
+    imageDiv.style.backgroundImage = "url('')";
+
+    // 2. Clear caption text
+    captionEl.textContent = '';
+
+    // 3. Remove active class so placeholder text fades back in
+    imageDiv.classList.remove('active');
+  }
+</script>
+
+</body>
+</html
